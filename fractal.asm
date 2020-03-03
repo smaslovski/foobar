@@ -48,11 +48,12 @@ dy	equ	dx
 x0	equ	-170*dx
 y0	equ	-96*dx
 ;**********************************
-tab_hl	macro
-	ld	l, (hl)	; 7
-	inc	h	; 6
-	ld	h, (hl) ; 7
-	endm		; = 20 t
+tab_bc	macro
+	add	hl, bc	;11
+	ld	c, (hl)	; 7
+	inc	hl	; 6
+	ld	b, (hl) ; 7
+	endm		; = 31 t
 ;**********************************
 tab_de	macro
 	add	hl, de
@@ -188,6 +189,6 @@ n1:
 	jp	newbt
 	ret
 ;**********************************
-tbl	equ	$0e000h
+tbl	equ	$+1000h
 ;**********************************
 	end	init
