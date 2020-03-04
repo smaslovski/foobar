@@ -73,7 +73,7 @@ mndbrt:
 	ld	ix, x0		; a = x0
 	ld	iy, y0		; b = y0
 newbt:
-	ld	c, 1		; initial bit mask
+	ld	(hl),1		; initial bit mask
 newpx:
 	ld	de, dx
 	add	ix, de		; update a
@@ -170,23 +170,25 @@ ovfl:
 	exx
 norm:
 	rr	b
-	rl	c		; update bitmask
+	rl	(hl)		; update bitmask
 	jr	nc, newpx	; to newpixel
 
-	ld	(hl), c		; write to upper half-screen
+	;;;ld	(hl), c		; write to upper half-screen
 
-	push	hl
+;;;	push	hl
 	ld	a, l
 	xor	0e0h
-	ld	l, a
+	ld	e, a
 	ld	a, 97h
 	sub	h
-	ld	h, a
-	ld	(hl), c		; write to lower half-screen
+	ld	d, a
+	;;;ld	(hl), c		; write to lower half-screen
+	ld	a,(hl)
+	ld	(de),a
 
 ;;;	ld	de,489fh	; check for end condition
 ;;;	sbc	hl, de
-	pop	hl
+;;;	pop	hl
 
 ;;;	jr	z, mndbrt	; restart
 
