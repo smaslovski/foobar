@@ -1,4 +1,4 @@
-	org	25000
+	org	#6000
 ;**********************************
 ; Tabulate fixpoint squares with
 ; accuracy up to 2^-8
@@ -6,38 +6,53 @@
 ; operand-index: 0000XXX.X XXXXXXX0
 ; table result:  0XXXXXX.X XXXXXXX0
 ;**********************************
+
+;**********************************
+tbl	equ	#c000
+;**********************************
+
 init:
 	di
-	ld	ix, tbl
-	ld	iy, tbl
-	ld	hl, 0		; operand-index in HL
-	ld	de, 0		; last square in DE
-	xor	a		;   with extra bits in A
-i1:
-	ld	b, e
-	res	0, b		; make it even
-	ld	(ix+0), b
-	ld	(ix+1), d
-	ld	(iy+0), b
-	ld	(iy+1), d
 
-	inc	hl
-	push	hl
-	add	hl, hl		; HL = 2*x + 2^-8
-	add	a, l		; 24 bit accumulator in DE:A
-	ld	l, h
-	ld	h, 0
-	adc	hl, de		; get next square as
-	ex	de, hl		; DE:A = x^2 + 2^-7*x + 2^-16 = (x + 2^-8)^2
+	xor	a
+	
+	ld	hl,tbl+2
+	exx
+	ld	bc,tbl
+	ld	d,a
+	ld	e,a
+	ld	h,a
+	ld	l,a
+i2:
+	exx
+	dec	hl
+	ld	(hl),a
+	exx
+	ex	af,af'
+	ld	a,h
+	and	#FE
+	ld	(bc),a
+	inc	bc
+	exx
+	dec	hl
+	ld	(hl),a
+	exx
+	ex	af,af'
+	ld	(bc),a
+	inc	bc
 
-	dec	ix
-	dec	ix
-	inc	iy
-	inc	iy
-	pop	hl
-	inc	hl
-	bit	4, h		; test for x >= 8.0
-	jr	z, i1
+	inc	de
+	inc	de
+	add	hl,de
+	adc	a,0
+	inc	de
+	inc	de
+	
+;	bit	5,d
+;	jr	z,i2
+	jp	p,i2 ; while A:HL is positive
+
+
 ;**********************************
 ; Draw fractal
 ;**********************************
@@ -53,7 +68,7 @@ tab_bc	macro
 	ld	c, (hl)	; 7
 	inc	hl	; 6
 	ld	b, (hl) ; 7
-	endm		; = 31 t
+	endm		; = 21 t
 ;**********************************
 tab_de	macro
 	add	hl, de
@@ -188,7 +203,5 @@ n1:
 	ld	h, a
 	jp	newbt
 	ret
-;**********************************
-tbl	equ	$+1000h
-;**********************************
+
 	end	init
