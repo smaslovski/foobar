@@ -1,4 +1,4 @@
-	org	25000
+	org	#6000
 ;**********************************
 ; Tabulate fixpoint squares with
 ; accuracy up to 2^-8
@@ -6,38 +6,33 @@
 ; operand-index: 0000XXX.X XXXXXXX0
 ; table result:  0XXXXXX.X XXXXXXX0
 ;**********************************
+tbl	equ	#8000
+;**********************************
 init:
 	di
-	ld	ix, tbl
-	ld	iy, tbl
-	ld	hl, 0		; operand-index in HL
-	ld	de, 0		; last square in DE
-	xor	a		;   with extra bits in A
+	ld	hl, tbl
+	ld	sp, hl
+	pop	de		; increment SP by 2
+	xor	a		; 24 bit accumulator in A:DE
+	ld	d, a
+	ld	e, a
 i1:
-	ld	b, e
-	res	0, b		; make it even
-	ld	(ix+0), b
-	ld	(ix+1), d
-	ld	(iy+0), b
-	ld	(iy+1), d
-
+	ld	b, a
+	ld	c, d
+	res	0, c		; make it even
+	push	bc		; store BC to bottom half
+	ld	(hl), c		; and next to
+	inc	hl		;  upper
+	ld	(hl), b		;   half
+	push	hl		; always below the data, can use
+	add	hl, hl		; HL = 2*x + 2^-8, bit15 = 0
+	add	hl, de
+	ex	de, hl
+	adc	a, 0		; A:DE = x^2 + 2^-7*x + 2^-16 = (x + 2^-8)^2
+	pop	hl		; restore HL and SP
 	inc	hl
-	push	hl
-	add	hl, hl		; HL = 2*x + 2^-8
-	add	a, l		; 24 bit accumulator in DE:A
-	ld	l, h
-	ld	h, 0
-	adc	hl, de		; get next square as
-	ex	de, hl		; DE:A = x^2 + 2^-7*x + 2^-16 = (x + 2^-8)^2
+	jp	p, i1		; A is negative if overflow
 
-	dec	ix
-	dec	ix
-	inc	iy
-	inc	iy
-	pop	hl
-	inc	hl
-	bit	4, h		; test for x >= 8.0
-	jr	z, i1
 ;**********************************
 ; Draw fractal
 ;**********************************
@@ -188,7 +183,4 @@ n1:
 	ld	h, a
 	jp	newbt
 	ret
-;**********************************
-tbl	equ	$+1000h
-;**********************************
 	end	init
