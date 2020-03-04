@@ -46,14 +46,14 @@ y0	equ	-96*dx
 tab_bc	macro
 	add	hl, bc	;11
 	ld	c, (hl)	; 7
-	inc	hl	; 6
+	inc	l	; 4  ;low byte is always at even address
 	ld	b, (hl) ; 7
-	endm		; = 31 t
+	endm		; = 29 t
 ;**********************************
 tab_de	macro
 	add	hl, de
 	ld	e, (hl)
-	inc	hl
+	inc	l
 	ld	d, (hl)
 	endm
 ;**********************************
@@ -85,14 +85,33 @@ loop:
 	exx
 
 y	equ	$+1		; imm16 as y variable
-	ld	bc, 0
-	ld	hl, tbl
-	tab_bc			; BC = y^2
+	
+	;;;ld	bc, 0
+	;;;ld	hl, tbl
+	;;;tab_bc			; BC = y^2
+
+	ld	hl,#2121  ;profit if we would pack the executable
+	ld	a,#80     ;this inversion could be incorporated in the table and coordinates?
+		          ;it does not affect subtraction nor addition
+	xor	h
+	ld	h,a       ;same bytes, but 25 tc instead of 31 tc
+	ld	c,(hl)
+	inc	l
+	ld	b,(hl)
+
 
 x	equ	$+1		; imm16 as x variable
-	ld	de, 0
-	ld	hl, tbl
-	tab_de			; DE = x^2
+
+	;;;ld	de, 0
+	;;;ld	hl, tbl
+	;;;tab_de			; DE = x^2
+	ld	hl,#2121
+	ld	a,#80
+	xor	h
+	ld	h,a
+	ld	e,(hl)
+	inc	l
+	ld	d,(hl)
 
 	ex	de, hl
 	add	hl, bc		; HL = x^2+y^2
@@ -113,19 +132,33 @@ x	equ	$+1		; imm16 as x variable
 	ld	hl, (x)
 	ld	de, (y)
 	add	hl, de
-	ld	de, tbl
-	tab_de			; DE = (x+y)^2
+
+	;;;ld	de, tbl
+	;;;tab_de			; DE = (x+y)^2
+	ld	a,#80
+	xor	h
+	ld	h,a
+	ld	e,(hl)
+	inc	l
+	ld	d,(hl)
 
 	and	a		; clear CF
 	ex	de, hl
 	sbc	hl, bc
-	st_iy	d, e		; b
+
+	;;;st_iy	d, e		; b
+	push	iy
+	pop	de	;1 byte smaller
+
 	add	hl, de		; HL = 2*x*y+b
 	ld	(y), hl
 
 	pop	hl
 
-	st_ix	d, e		; a
+	;;;st_ix	d, e		; a
+	push	ix
+	pop	de	;1 byte smaller
+
 	add	hl, de		; HL = x^2-y^2+a
 	ld	(x), hl
 
@@ -150,15 +183,17 @@ norm:
 	sub	h
 	ld	h, a
 	ld	(hl), c		; write to lower half-screen
-	ld	de, 489fh	; check for end condition
-	sbc	hl, de
+
+;;;	ld	de,489fh	; check for end condition
+;;;	sbc	hl, de
 	pop	hl
-	jp	z, mndbrt	; restart
+
+;;;	jr	z, mndbrt	; restart
 
 	inc	l
 	ld	a, 1fh
 	and	l
-	jr	nz, newbt
+newbt3:	jr	nz,newbt
 
 	ld	ix, x0		; a = x0
 	ld	de, dy
@@ -172,15 +207,24 @@ norm:
 	ld	a, l
 	sub	20h
 	ld	l, a
-	jp	newbt
+;newbt2:	jr	newbt2
+	jr	newbt2
 n1:
 	ld	a, 0e0h
 	and	l
-	jp	z, newbt
+	jr	z,newbt2
 
 	ld	a, h
 	sub	08h
 	ld	h, a
-	jp	newbt
-	ret
+
+	xor	l
+newbt2:	cp	#c8 ;here only when H=40 and L=00,20,40,60,80,A0,C0,E0
+		    ; or H=48 and L=00,20,40,60,80. 4880 is exit condition
+	jr	nz,newbt3
+	halt	;stops the cpu because of previous DI
+
+	;;;jp	newbt
+	;;;ret
 	end	init
+
