@@ -6,52 +6,32 @@
 ; operand-index: 0000XXX.X XXXXXXX0
 ; table result:  0XXXXXX.X XXXXXXX0
 ;**********************************
-
+tbl	equ	#8000
 ;**********************************
-tbl	equ	#c000
-;**********************************
-
 init:
 	di
-
-	xor	a
-	
-	ld	hl,tbl+2
-	exx
-	ld	bc,tbl
-	ld	d,a
-	ld	e,a
-	ld	h,a
-	ld	l,a
-i2:
-	exx
-	dec	hl
-	ld	(hl),a
-	exx
-	ex	af,af'
-	ld	a,h
-	and	#FE
-	ld	(bc),a
-	inc	bc
-	exx
-	dec	hl
-	ld	(hl),a
-	exx
-	ex	af,af'
-	ld	(bc),a
-	inc	bc
-
-	inc	de
-	inc	de
-	add	hl,de
-	adc	a,0
-	inc	de
-	inc	de
-	
-;	bit	5,d
-;	jr	z,i2
-	jp	p,i2 ; while A:HL is positive
-
+	ld	hl, tbl
+	ld	sp, hl
+	pop	de		; increment SP by 2
+	xor	a		; 24 bit accumulator in A:DE
+	ld	d, a
+	ld	e, a
+i1:
+	ld	b, a
+	ld	c, d
+	res	0, c		; make it even
+	push	bc		; store BC to bottom half
+	ld	(hl), c		; and next to
+	inc	hl		;  upper
+	ld	(hl), b		;   half
+	push	hl		; always below the data, can use
+	add	hl, hl		; HL = 2*x + 2^-8, bit15 = 0
+	add	hl, de
+	ex	de, hl
+	adc	a, 0		; A:DE = x^2 + 2^-7*x + 2^-16 = (x + 2^-8)^2
+	pop	hl		; restore HL and SP
+	inc	hl
+	jp	p, i1		; A is negative if overflow
 
 ;**********************************
 ; Draw fractal
@@ -68,7 +48,7 @@ tab_bc	macro
 	ld	c, (hl)	; 7
 	inc	hl	; 6
 	ld	b, (hl) ; 7
-	endm		; = 21 t
+	endm		; = 31 t
 ;**********************************
 tab_de	macro
 	add	hl, de
@@ -203,5 +183,4 @@ n1:
 	ld	h, a
 	jp	newbt
 	ret
-
 	end	init
