@@ -165,7 +165,8 @@ x	equ	$+1		; imm16 as x variable
 	exx
 
 	djnz	loop		; to next iteration
-	jr	norm
+	;;;jr	norm
+	db	#3E	;opcode for LD A,imm
 ovfl:
 	exx
 norm:
