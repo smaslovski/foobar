@@ -43,21 +43,9 @@ dy	equ	dx
 x0	equ	-170*dx
 y0	equ	-96*dx
 ;**********************************
-st_ix   macro   hi, lo
-        ld      hi, ixh
-        ld      lo, ixl
-        endm
-;**********************************
-st_iy   macro   hi, lo
-        ld      hi, iyh
-        ld      lo, iyl
-        endm
-;**********************************
 
 mndbrt:
 	ld	hl, 4000h	; screen start addr
-	ld	ix, x0		; a = x0
-	ld	iy, y0		; b = y0
 newbt:
 	ld	(hl), 1		; initial bit mask
 newpx:
@@ -66,13 +54,13 @@ newpx:
 	exx			; moved here, can be useful
 
 	ld	de, dx
-	add	ix, de		; update a
-	ld	a, ixh
-	or	#80		; fix MSB, because sign can change
-	ld	ixh, a
-	ld	(x), ix		; x = a
-	ld	(y), iy		; y = b
-	ld	sp, iy
+	ld	hl, (za)
+	add	hl, de		; update a
+	set	7, h		; fix MSB, because sign can change
+	ld	(za), hl
+	ld	(x), hl		; x = a
+	ld	hl, (zb)
+	ld	(y), hl		; y = b
 	jr	entry
 
 loop:
@@ -83,7 +71,8 @@ loop:
 
 	sbc	hl, bc		; here CF is not set
 	sbc	hl, bc		; HL = x^2-y^2
-	st_ix	b, c		; a
+za	equ	$+1
+	ld	bc, x0		; a
 	add	hl, bc		; HL = x^2-y^2+a
 	set	7, h		; fix MSB
 	ld	(x), hl		; new x
@@ -99,12 +88,13 @@ y	equ	$+1		; imm16 as y variable
 
 	and	a		; clear CF
 	sbc	hl, de		; HL = 2*x*y
-	st_iy	d, e		; b
+zb	equ	$+1
+	ld	de, y0		; b
 	add	hl, de		; HL = 2*x*y+b
 	set	7, h
 	ld	(y), hl		; new y
-	ld	sp, hl
 entry:
+	ld	sp, hl
 	pop	bc		; BC = y^2
 
 x	equ	$+1		; imm16 as x variable
@@ -138,10 +128,16 @@ ovfl:
 	and	l
 	jr	nz, newbt
 
-	ld	ix, x0		; a = x0
+	exx
+	ld	hl, x0
+	ld	(za), hl	; set a = x0
 	ld	de, dy
-	add	iy, de		; update b, no need to fix MSB
-	jr	c, mndbrt	; restart when iy >= 0
+	ld	hl, (zb)
+	add	hl, de		; update b, no need to fix MSB
+	ld	(zb), hl
+	exx
+trap:
+	jr	c, trap		; loop when iy >= 0
 
 	inc	h
 	ld	a, 07h
