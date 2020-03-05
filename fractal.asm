@@ -142,7 +142,7 @@ ovfl:
 	ld	ix, x0		; a = x0
 	ld	de, dy
 	add	iy, de		; update b, no need to fix MSB
-	jp	c, mndbrt	; restart when iy >= 0
+	jr	c, mndbrt	; restart when iy >= 0
 
 	inc	h
 	ld	a, 07h
