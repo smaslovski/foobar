@@ -59,7 +59,7 @@ mndbrt:
 	ld	ix, x0		; a = x0
 	ld	iy, y0		; b = y0
 newbt:
-	ld	c, 1		; initial bit mask
+	ld	(hl), 1		; initial bit mask
 newpx:
 	ld	b, niter	; max iteration number
 
@@ -121,17 +121,16 @@ x	equ	$+1		; imm16 as x variable
 	djnz	loop		; to next iteration
 ovfl:
 	rr	b
-	rl	c		; update bitmask
-	jr	nc, newpx	; to newpixel
+	rl	(hl)		; update bitmask in place
+	jr	nc, newpx	; to new pixel
 
-	ld	(hl), c		; write to upper half-screen
 	ld	a, l
 	xor	0e0h
 	ld	e, a
 	ld	a, 97h
 	sub	h
 	ld	d, a
-	ld	a, c
+	ld	a, (hl)
 	ld	(de), a		; write to lower half-screen
 
 	inc	l
@@ -152,15 +151,16 @@ ovfl:
 	ld	a, l
 	sub	20h
 	ld	l, a
-	jp	newbt
+	jr	newbt2
 n1:
 	ld	a, 0e0h
 	and	l
-	jp	z, newbt
+	jr	z, newbt2
 
 	ld	a, h
 	sub	08h
 	ld	h, a
+newbt2:
 	jp	newbt
 
 	end	init
