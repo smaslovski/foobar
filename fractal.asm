@@ -1,4 +1,4 @@
-	org	#6000
+	org	#b000 ; on rubber speccies, this is FAST ram, so overall code runs somewhat faster
 ;**********************************
 ; Tabulate fixpoint squares with
 ; accuracy up to 2^-8
@@ -142,7 +142,7 @@ x	equ	$+1		; imm16 as x variable
 	inc	l
 	ld	d,(hl)
 
-	and	a		; clear CF
+	;;;;and	a		; clear CF -- XOR H has already cleared CY!
 	ex	de, hl
 	sbc	hl, bc
 
