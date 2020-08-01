@@ -38,10 +38,11 @@ i1:
 ;**********************************
 niter	equ	32
 max2	equ	7
-dx	equ	6
-dy	equ	dx
-x0	equ	-170*dx
-y0	equ	-96*dx
+;dx	equ	6
+;dy	equ	dx
+delta	equ	6
+x0	equ	-170*delta
+y0	equ	-96*delta
 ;**********************************
 tab_bc	macro
 	add	hl, bc	;11
@@ -69,13 +70,13 @@ st_iy   macro   hi, lo
 ;**********************************
 
 mndbrt:
+	ld	de, delta
 	ld	hl, 4000h	; screen start addr
 	ld	ix, x0		; a = x0
 	ld	iy, y0		; b = y0
 newbt:
 	ld	(hl),1		; initial bit mask
 newpx:
-	ld	de, dx
 	add	ix, de		; update a
 	ld	(x), ix		; x = a
 	ld	(y), iy		; y = b
@@ -179,13 +180,13 @@ norm:
 ;;;	push	hl
 	ld	a, l
 	xor	0e0h
-	ld	e, a
+	ld	c, a
 	ld	a, 97h
 	sub	h
-	ld	d, a
+	ld	b, a
 	;;;ld	(hl), c		; write to lower half-screen
 	ld	a,(hl)
-	ld	(de),a
+	ld	(bc),a
 
 ;;;	ld	de,489fh	; check for end condition
 ;;;	sbc	hl, de
@@ -199,7 +200,6 @@ norm:
 newbt3:	jr	nz,newbt
 
 	ld	ix, x0		; a = x0
-	ld	de, dy
 	add	iy, de		; update b
 
 	inc	h

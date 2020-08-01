@@ -11,7 +11,7 @@ all: $(EXE) size
 $(EXE): $(SRC)
 	$(ASM) -d --tapbas --alocal $(SRC) $(EXE) >$(LST)
 
-run: $(EXE)
+run: $(EXE) size
 	fuse $(EXE)
 
 size: $(EXE)
