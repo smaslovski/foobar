@@ -150,19 +150,21 @@ trap:
 	and	7
 	jr	nz,newln2
 	ld	a,l
-	add	a,32
+	sub	-32
 	ld	l,a
-	jr	c,newln2
-	ld	a,h
-	sub	8
+
+;;	jr	c,newln2
+;;	ld	a,h
+;;	sub	8
+;;	ld	h,a
+
+	sbc	a,a
+	and	#F8
+	add	a,h
 	ld	h,a
 newln2
 	jp	newln
 
 
 	end	init
-
-
-
-
 
